@@ -5,6 +5,7 @@ from app.modules.grouping import case_groups
 from app.modules.policy import policy
 from app.modules.prepare import prepare
 from app.modules.reconcile import balance
+from app.modules.signoff import build as build_signoff
 
 
 def evaluate(rows, stage):
@@ -28,9 +29,12 @@ def run(data, stage=5):
     intake = inspect(data)
     output = {"intake": {k: v for k, v in intake.items() if k != "rows"}}
     if stage == 1:
+        # 采信阶段先落逐行台账；归属结论需等业务组生成，在 stage 5 补全
+        output["signoff"] = {"ledger": intake["ledger"], "gate": None, "groups": []}
         return output
     cases = [evaluate(rows, stage) for _, rows in case_groups(intake["rows"])]
     output["cases"] = cases
     if stage >= 5:
         output["balance"] = balance(intake, cases)
+        output["signoff"] = build_signoff(intake, cases)
     return output

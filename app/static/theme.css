@@ -51,3 +51,10 @@ body.dispatch {margin:0;background:var(--bg);color:var(--ink);font:var(--size)/1
 .freight-rate {border:1px solid var(--line);border-top:3px solid var(--accent);padding:9px;display:grid;gap:3px}
 .freight-rate strong,.freight-charge {font-weight:800;color:var(--accent)}
 .freight-charge {margin-top:8px;text-align:right}
+
+.dispatch .gate {margin:8px 0;padding:8px 12px;border-radius:var(--radius);border:1px solid var(--line);font-weight:700}
+.dispatch .gate[data-open="true"] {color:var(--accent);border-color:var(--accent)}
+.dispatch .gate[data-open="false"] {color:var(--alert);border-color:var(--alert)}
+.dispatch #decision {margin-top:12px;max-width:580px}
+.dispatch #decision-meta {color:var(--sub);margin:0 0 8px;overflow-wrap:anywhere}
+.dispatch .badge[data-result="PENDING"],.dispatch .badge[data-result="HELD"] {color:var(--sub)}

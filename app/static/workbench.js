@@ -7,10 +7,17 @@ const file = document.querySelector('#file');
 const profile = document.querySelector('#profile');
 const status = document.querySelector('#notice');
 const detail = document.querySelector('#review');
+const decisionForm = document.querySelector('#decision');
 const evidence = document.querySelector('#evidence');
 const stages = [...document.querySelectorAll('[data-stage]')];
 let stage = 'balance';
 let report, selected, batch, running = false;
+let idempotencyKey = newKey();
+
+function newKey() {
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  return Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
+}
 
 function source() {
   const data = new FormData();
@@ -26,7 +33,7 @@ function announce(text, failure = false) {
 
 function draw() {
   if (!report) return;
-  snapshot(report, selected, stage);
+  snapshot(report, selected, stage, batch);
   visualize(report, selected);
   for (const button of stages) button.setAttribute('aria-pressed',String(button.dataset.stage===stage));
   document.querySelector('#panel-title').textContent = stages.find(button => button.dataset.stage===stage)?.textContent || '运行对账';
@@ -44,6 +51,7 @@ function show(payload, committed = false) {
   report = committed ? payload.report : payload;
   detail.elements.note.value = batch?.note || '';
   selected = report.cases?.[0]?.case;
+  idempotencyKey = newKey();
   draw();
 }
 
@@ -101,6 +109,33 @@ detail.addEventListener('submit',event=>{
     const payload={status:event.submitter.value,revision:batch.revision,note:detail.elements.note.value};
     const result=await request(`/api/runs/${batch.id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     show(result,true); announce(result.status==='APPROVED'?'批次已签发':'批次已暂缓'); await refresh();
+  });
+});
+decisionForm.addEventListener('submit', event => {
+  event.preventDefault();
+  if (!batch) return;
+  // 同一提交动作复用幂等键；成功或切换批次后换新键，失败重试不产生第二条裁定
+  const payload = {
+    case: selected,
+    status: event.submitter.value,
+    note: decisionForm.elements.note.value,
+    revision: batch.revision,
+    idempotency_key: idempotencyKey,
+  };
+  perform(async () => {
+    try {
+      const result = await request(`/api/runs/${batch.id}/decisions`,
+        {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      show(result,true);
+      announce(event.submitter.value === 'APPROVED' ? `分组 ${selected} 已签发` : `分组 ${selected} 已暂缓`);
+      await refresh();
+    } catch (error) {
+      if (error.message.includes('刷新')) {
+        const latest = await request(`/api/runs/${batch.id}`);
+        show(latest,true);
+      }
+      throw error;
+    }
   });
 });
 preview(stage);

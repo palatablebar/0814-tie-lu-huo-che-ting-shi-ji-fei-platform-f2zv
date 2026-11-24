@@ -8,7 +8,7 @@
 {% endmacro %}
 {% macro intake() %}
 <form class="source" id="source" aria-label="批次输入">
-  <label>输入样例 <select id="profile"><option value="dirty">带异常样例</option><option value="clean">可签发样例</option></select></label>
+  <label>输入样例 <select id="profile"><option value="dirty">带异常样例</option><option value="attributable">可分组签批样例</option><option value="clean">可整批签发样例</option></select></label>
   <label for="file" class="file">上传 CSV</label><input id="file" type="file" accept=".csv,text/csv"><span id="file-name" aria-live="polite"></span>
   <button type="submit" class="action">执行批次</button>
 </form>
@@ -23,6 +23,7 @@
 {% macro results() %}
 <section class="panel results" aria-labelledby="panel-title">
   <div class="panel-head"><h2 id="panel-title">运行对账</h2><span id="counts"></span></div>
+  <p id="gate-banner" class="gate" role="status" hidden></p>
   <div class="scroll"><table id="rows" aria-label="阶段结果"></table></div>
 </section>
 {% endmacro %}
@@ -30,7 +31,17 @@
 <section class="panel chart" aria-label="结果图"><h2>{{ p.chart }}</h2><div id="visual"></div></section>
 {% endmacro %}
 {% macro inspection() %}
-<section class="panel inspection"><h2 id="detail-title">采信摘要</h2><pre id="detail"></pre></section>
+<section class="panel inspection"><h2 id="detail-title">采信摘要</h2><pre id="detail"></pre>
+  <form id="decision" hidden>
+    <p id="decision-meta"></p>
+    <label for="decision-note">裁定意见</label>
+    <textarea id="decision-note" minlength="3" maxlength="200" required></textarea>
+    <div class="review-actions">
+      <button type="submit" name="decision" value="HELD">暂缓本组</button>
+      <button type="submit" class="action" name="decision" value="APPROVED">签发本组</button>
+    </div>
+  </form>
+</section>
 {% endmacro %}
 {% macro archive() %}
 <aside class="panel archive"><h2>批次复核</h2><ul id="history"></ul>

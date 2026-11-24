@@ -28,6 +28,11 @@ def clean():
 
 
 @pytest.fixture
+def attributable():
+    return (ROOT / "sample_data" / "attributable.csv").read_bytes()
+
+
+@pytest.fixture
 def client(tmp_path):
     return create_app(tmp_path / "runs.db").test_client()
 

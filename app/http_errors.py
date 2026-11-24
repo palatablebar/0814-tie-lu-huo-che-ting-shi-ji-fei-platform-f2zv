@@ -17,6 +17,11 @@ LABELS = {
     "UNRESOLVED_ISSUES": "存在待处理差异",
     "SAMPLE_UNKNOWN": "样例不存在",
     "STAGE_UNKNOWN": "处理阶段不存在",
+    "DECISION_FIELDS": "请填写 3 至 200 字裁定意见并携带修订号与幂等键",
+    "GROUP_UNKNOWN": "业务组不存在",
+    "GROUP_FINALIZED": "该业务组已有裁定",
+    "GROUP_NOT_ELIGIBLE": "该业务组仍有归属异常或差异，不能签发",
+    "BATCH_GATE_CLOSED": "存在无法归属的异常或数量对不上，整批等待补齐",
 }
 
 
@@ -24,10 +29,18 @@ def response(error):
     code = error.code
     status = (
         404
-        if code in {"RUN_NOT_FOUND", "SAMPLE_UNKNOWN", "STAGE_UNKNOWN"}
+        if code in {"RUN_NOT_FOUND", "SAMPLE_UNKNOWN", "STAGE_UNKNOWN", "GROUP_UNKNOWN"}
         else (
             409
-            if code in {"STALE_REVIEW", "RUN_FINALIZED", "UNRESOLVED_ISSUES"}
+            if code
+            in {
+                "STALE_REVIEW",
+                "RUN_FINALIZED",
+                "UNRESOLVED_ISSUES",
+                "GROUP_FINALIZED",
+                "GROUP_NOT_ELIGIBLE",
+                "BATCH_GATE_CLOSED",
+            }
             else 413 if code == "FILE_TOO_LARGE" else 422
         )
     )
